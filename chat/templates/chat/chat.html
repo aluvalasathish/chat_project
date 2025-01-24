@@ -1,0 +1,193 @@
+{% extends 'chat/base.html' %}
+
+{% block title %}Chat{% endblock %}
+
+{% block content %}
+<div class="flex h-[calc(100vh-4rem)]">
+    <!-- Sidebar -->
+    <div id="sidebar" class="w-80 bg-white border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out">
+        <!-- Sidebar Header -->
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+                        <span class="text-white font-semibold">{{ user.username|first|upper }}</span>
+                    </div>
+                    <div>
+                        <h2 class="font-semibold text-gray-900">{{ user.username }}</h2>
+                        <p class="text-sm text-emerald-600 flex items-center">
+                            <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
+                            Active Now
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="p-4 border-b border-gray-200">
+            <div class="relative">
+                <input type="text" 
+                       id="userSearch" 
+                       placeholder="Search users..." 
+                       class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-shadow">
+                <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Users List -->
+        <div class="flex-1 overflow-y-auto scrollbar-hide">
+            <!-- Recent Chats -->
+            <div class="p-4 border-b border-gray-200">
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Recent Chats</h3>
+                <div class="space-y-2">
+                    {% for user_info in users|slice:":5" %}
+                    <button data-user-id="{{ user_info.user.id }}" 
+                            data-username="{{ user_info.user.username }}"
+                            class="user-button w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex items-center space-x-3 group">
+                        <div class="relative flex-shrink-0">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                <span class="text-blue-600 font-semibold text-lg">{{ user_info.user.username|first|upper }}</span>
+                            </div>
+                            <div class="absolute bottom-0 right-0 w-3.5 h-3.5 {% if user_info.is_active %}bg-emerald-500{% else %}bg-gray-400{% endif %} rounded-full border-2 border-white"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline">
+                                <span class="font-medium text-gray-900 truncate">{{ user_info.user.username }}</span>
+                                <span class="text-xs text-gray-500">
+                                    {% if user_info.is_active %}
+                                        Active Now
+                                    {% else %}
+                                        {% if user_info.last_seen %}
+                                            {{ user_info.last_seen|timesince }} ago
+                                        {% else %}
+                                            Offline
+                                        {% endif %}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-500 truncate">Click to start chat</p>
+                        </div>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- All Users -->
+            <div class="p-4">
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">All Users</h3>
+                <div class="space-y-2" id="allUsersList">
+                    {% for user_info in users %}
+                    <button data-user-id="{{ user_info.user.id }}" 
+                            data-username="{{ user_info.user.username }}"
+                            class="user-button w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex items-center space-x-3 group">
+                        <div class="relative flex-shrink-0">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                <span class="text-blue-600 font-semibold text-lg">{{ user_info.user.username|first|upper }}</span>
+                            </div>
+                            <div class="absolute bottom-0 right-0 w-3.5 h-3.5 {% if user_info.is_active %}bg-emerald-500{% else %}bg-gray-400{% endif %} rounded-full border-2 border-white"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="font-medium text-gray-900">{{ user_info.user.username }}</span>
+                            <p class="text-sm text-gray-500 truncate">
+                                {% if user_info.is_active %}
+                                    Active Now
+                                {% else %}
+                                    {% if user_info.last_seen %}
+                                        Last seen: {{ user_info.last_seen|timesince }} ago
+                                    {% else %}
+                                        Offline
+                                    {% endif %}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Logout Button -->
+        <div class="p-4 border-t border-gray-200 md:hidden">
+            <a href="{% url 'logout' %}" 
+               class="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                <svg class="w-5 h-5 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                Sign Out
+            </a>
+        </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="flex-1 flex flex-col bg-white">
+        <!-- Chat Header -->
+        <div class="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white">
+            <h2 id="selectedUser" class="text-lg font-semibold text-gray-900">Select a user to start chatting</h2>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50" id="messagesList">
+            <div class="text-center text-gray-500">
+                <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                <p class="text-gray-600">Select a user to start a conversation</p>
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="border-t border-gray-200 bg-white p-4">
+            <form id="messageForm" class="flex space-x-4">
+                <input type="text" 
+                       id="messageInput" 
+                       class="flex-1 rounded-full border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 transition-shadow px-6"
+                       placeholder="Type your message..."
+                       disabled>
+                <button type="submit" 
+                        class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        disabled>
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                    Send
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const currentUserId = "{{ user.id }}";
+    const currentUsername = "{{ user.username }}";
+
+    // Function to close sidebar
+    function closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        if (sidebar && overlay && window.innerWidth < 768) {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Add click event listeners to user buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const userButtons = document.querySelectorAll('.user-button');
+        userButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Close sidebar on mobile after user selection
+                closeSidebar();
+            });
+        });
+    });
+</script>
+<script src="/static/js/chat.js"></script>
+{% endblock %}

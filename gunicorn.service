@@ -1,0 +1,16 @@
+[Unit]
+Description=Gunicorn daemon for Chat Application
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/chat_project
+ExecStart=/home/ubuntu/chat_project/venv/bin/gunicorn \
+    --access-logfile - \
+    --workers 3 \
+    --bind unix:/home/ubuntu/chat_project/chat_project.sock \
+    chat_project.wsgi:application
+
+[Install]
+WantedBy=multi-user.target 
